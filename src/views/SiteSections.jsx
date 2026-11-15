@@ -546,6 +546,22 @@ export function Footer({
         <div className="footer-about">
           <a className="footer-brand" href="#home">Seithati Weavers</a>
           <p>{t.footerTagline}</p>
+          <a
+            className="footer-social-link"
+            href="https://www.facebook.com/profile.php?id=61596467557199"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit Seithati Weavers on Facebook"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              focusable="false"
+            >
+              <path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.6 1.6-1.6h1.7V3.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.3H7.3v3.2h2.8V21h3.4Z" />
+            </svg>
+            <span>Facebook</span>
+          </a>
         </div>
         <div>
           <h3>{t.footerExplore}</h3>
