@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+admin/.dart_tool/
+admin/.flutter-plugins
+admin/.flutter-plugins-dependencies
+admin/build/
+admin/ios/Flutter/Generated.xcconfig
+admin/ios/Flutter/flutter_export_environment.sh
+admin/android/local.properties
+admin/web/canvaskit/
+admin/web/flutter_service_worker.js
+admin/web/main.dart.js
+admin/web/version.json
