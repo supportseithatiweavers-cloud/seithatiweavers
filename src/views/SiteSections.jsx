@@ -593,9 +593,6 @@ export function Footer({
         <div>
           <h3>{t.footerGetInTouch}</h3>
           <div className="footer-links">
-            <a href={`tel:${details.phone.replace(/\s+/g, "")}`}>
-              {details.phone}
-            </a>
             {details.secondaryPhone && (
               <a href={`tel:${details.secondaryPhone.replace(/\s+/g, "")}`}>
                 {details.secondaryPhone}

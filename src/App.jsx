@@ -42,7 +42,7 @@ const quickFaq = {
     {
       question: "How can I contact you?",
       answer:
-        "You can call +266 63315077 or +266 58079110, message us on WhatsApp, or send an enquiry via the website form.",
+        "You can call {phoneNumbers}, message us on WhatsApp, or send an enquiry via the website form.",
     },
   ],
   st: [
@@ -69,7 +69,7 @@ const quickFaq = {
     {
       question: "Nka ikopanya joang le lona?",
       answer:
-        "U ka letsetsa +266 63315077 kapa +266 58079110, u re romelle molaetsa ho WhatsApp, kapa u romelle potso ka foromo ea webosaete.",
+        "U ka letsetsa {phoneNumbers}, u re romelle molaetsa ho WhatsApp, kapa u romelle potso ka foromo ea webosaete.",
     },
   ],
 };
@@ -126,13 +126,16 @@ function FloatingHelp({ language, setLanguage, contactDetails }) {
   const [faqOpen, setFaqOpen] = useState(false);
   const [conversation, setConversation] = useState([]);
   const phoneNumbers = [
-    contactDetails.phone,
-    contactDetails.secondaryPhone,
-  ].filter(Boolean);
+    ...new Map(
+      [contactDetails.phone, contactDetails.secondaryPhone]
+        .filter(Boolean)
+        .map((phone) => [phone.replace(/\D/g, ""), phone.trim()]),
+    ).values(),
+  ];
   const faqEntries = (quickFaq[language] ?? quickFaq.en).map((item) => ({
     ...item,
     answer: item.answer.replace(
-      "+266 63315077 or +266 58079110",
+      "{phoneNumbers}",
       phoneNumbers.join(language === "st" ? " kapa " : " or "),
     ),
   }));
