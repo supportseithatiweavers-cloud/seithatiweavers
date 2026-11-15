@@ -42,7 +42,7 @@ const quickFaq = {
     {
       question: "How can I contact you?",
       answer:
-        "You can call +2663315077, message us on WhatsApp, or send an enquiry via the website form.",
+        "You can call +266 63315077 or +266 58079110, message us on WhatsApp, or send an enquiry via the website form.",
     },
   ],
   st: [
@@ -69,7 +69,7 @@ const quickFaq = {
     {
       question: "Nka ikopanya joang le lona?",
       answer:
-        "U ka letsetsa +2663315077, u re romelle molaetsa ho WhatsApp, kapa u romelle potso ka foromo ea webosaete.",
+        "U ka letsetsa +266 63315077 kapa +266 58079110, u re romelle molaetsa ho WhatsApp, kapa u romelle potso ka foromo ea webosaete.",
     },
   ],
 };
@@ -121,12 +121,22 @@ function ServiceIcon({ type }) {
   );
 }
 
-function FloatingHelp({ language, setLanguage }) {
+function FloatingHelp({ language, setLanguage, contactDetails }) {
   const [open, setOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
   const [conversation, setConversation] = useState([]);
-  const faqEntries = quickFaq[language] ?? quickFaq.en;
-  const whatsappUrl = new URL("https://wa.me/2663315077");
+  const phoneNumbers = [
+    contactDetails.phone,
+    contactDetails.secondaryPhone,
+  ].filter(Boolean);
+  const faqEntries = (quickFaq[language] ?? quickFaq.en).map((item) => ({
+    ...item,
+    answer: item.answer.replace(
+      "+266 63315077 or +266 58079110",
+      phoneNumbers.join(language === "st" ? " kapa " : " or "),
+    ),
+  }));
+  const whatsappUrl = new URL(`https://wa.me/${contactDetails.whatsapp}`);
   whatsappUrl.searchParams.set(
     "text",
     "Hello Seithati Weavers, I would like to learn more about your handmade crafts.",
@@ -225,12 +235,18 @@ function FloatingHelp({ language, setLanguage }) {
             </section>
           )}
           <nav className="help-service-list" aria-label="Quick help">
-            <a className="help-service" href="tel:+2663315077">
-              <span className="help-service-icon">
-                <ServiceIcon type="phone" />
-              </span>
-              {language === "en" ? "Call us" : "Re letsetse"}
-            </a>
+            {phoneNumbers.map((phone, index) => (
+              <a
+                className="help-service"
+                href={`tel:${phone.replace(/\s+/g, "")}`}
+                key={phone}
+              >
+                <span className="help-service-icon">
+                  <ServiceIcon type="phone" />
+                </span>
+                {language === "en" ? `Call ${phone}` : `Letsetsa ${phone}`}
+              </a>
+            ))}
             <a
               className="help-service"
               href={whatsappUrl.toString()}
@@ -330,7 +346,11 @@ export default function App() {
         contactDetails={content.contact}
         t={t}
       />
-      <FloatingHelp language={language} setLanguage={setLanguage} />
+      <FloatingHelp
+        language={language}
+        setLanguage={setLanguage}
+        contactDetails={content.contact}
+      />
     </>
   );
 }

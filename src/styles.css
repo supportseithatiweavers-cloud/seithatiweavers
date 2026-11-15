@@ -918,6 +918,15 @@ img {
   width: fit-content;
 }
 
+.contact-phone-list a {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.contact-phone-list a:hover {
+  color: var(--clay);
+}
+
 .contact-icon {
   display: grid;
   width: 46px;

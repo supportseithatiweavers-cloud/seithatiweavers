@@ -58,8 +58,23 @@ export function useSiteContent() {
       doc(db, "site", "content"),
       (snapshot) => {
         const remote = snapshot.data() ?? {};
+        const merged = mergeObjects(fallbackContent, remote);
+        const remoteContact = remote.contact ?? {};
+        const isOldPhone = (value) =>
+          String(value ?? "").replace(/\D/g, "") === "2663315077";
         setContent({
-          ...mergeObjects(fallbackContent, remote),
+          ...merged,
+          contact: {
+            ...merged.contact,
+            phone: isOldPhone(remoteContact.phone)
+              ? contactDetails.phone
+              : merged.contact.phone,
+            secondaryPhone:
+              remoteContact.secondaryPhone ?? contactDetails.secondaryPhone,
+            whatsapp: isOldPhone(remoteContact.whatsapp)
+              ? contactDetails.whatsapp
+              : merged.contact.whatsapp,
+          },
           crafts: mergeCrafts(remote),
         });
       },

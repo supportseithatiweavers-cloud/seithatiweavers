@@ -441,13 +441,26 @@ export function Contact({
           <h2>{t.contactTitle}</h2>
           <p>{t.contactCopy}</p>
           <div className="contact-details">
-            <a href={`tel:${details.phone}`}>
+            <div className="contact-location contact-phone-list">
               <span className="contact-icon" aria-hidden="true">☎</span>
               <span>
                 <strong>{t.callOrWhatsApp}</strong>
-                <span>{details.phone}</span>
+                <span>
+                  <a href={`tel:${details.phone.replace(/\s+/g, "")}`}>
+                    {details.phone}
+                  </a>
+                </span>
+                {details.secondaryPhone && (
+                  <span>
+                    <a
+                      href={`tel:${details.secondaryPhone.replace(/\s+/g, "")}`}
+                    >
+                      {details.secondaryPhone}
+                    </a>
+                  </span>
+                )}
               </span>
-            </a>
+            </div>
             <a href={`mailto:${details.email}`}>
               <span className="contact-icon" aria-hidden="true">✉</span>
               <span>
@@ -564,7 +577,21 @@ export function Footer({
         <div>
           <h3>{t.footerGetInTouch}</h3>
           <div className="footer-links">
-            <a href={`tel:${details.phone}`}>{details.phone}</a>
+            <a href={`tel:${details.phone.replace(/\s+/g, "")}`}>
+              {details.phone}
+            </a>
+            {details.secondaryPhone && (
+              <a href={`tel:${details.secondaryPhone.replace(/\s+/g, "")}`}>
+                {details.secondaryPhone}
+              </a>
+            )}
+            <a
+              href={`https://wa.me/${details.whatsapp}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              WhatsApp: {details.phone}
+            </a>
             <a href={`mailto:${details.email}`}>{details.email}</a>
             <a href="#contact">{details.fullAddress}</a>
           </div>
