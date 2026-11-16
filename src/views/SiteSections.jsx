@@ -101,20 +101,20 @@ export function LanguageSelect({ language, onChange, label }) {
   );
 }
 
-export function Header({ language, setLanguage, t }) {
+export function Header({ language, setLanguage, t, currentPage }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigation = [
-    [t.navigation.home, "#home"],
-    [t.navigation.crafts, "#collection"],
-    [t.navigation.story, "#story"],
-    [t.navigation.craft, "#craft"],
-    [t.navigation.contact, "#contact"],
+    [t.navigation.home, "/", "home"],
+    [t.navigation.crafts, "/crafts", "crafts"],
+    [t.navigation.story, "/story", "story"],
+    [t.navigation.craft, "/process", "process"],
+    [t.navigation.contact, "/contact", "contact"],
   ];
 
   return (
     <header className="site-header">
       <div className="header-inner">
-        <a className="brand" href="#home" aria-label="Seithati Weavers home">
+        <a className="brand" href="/" aria-label="Seithati Weavers home">
           <img className="brand-logo" src={seithatiLogo} alt="" />
           <span>
             <strong>Seithati</strong>
@@ -122,8 +122,13 @@ export function Header({ language, setLanguage, t }) {
           </span>
         </a>
         <nav className="desktop-nav" aria-label="Main navigation">
-          {navigation.map(([label, href]) => (
-            <a key={href} href={href}>
+          {navigation.map(([label, href, page]) => (
+            <a
+              key={href}
+              href={href}
+              className={currentPage === page ? "is-active" : undefined}
+              aria-current={currentPage === page ? "page" : undefined}
+            >
               {label}
             </a>
           ))}
@@ -134,7 +139,7 @@ export function Header({ language, setLanguage, t }) {
             onChange={setLanguage}
             label={t.languageLabel}
           />
-          <a className="button button-dark header-cta" href="#collection">
+          <a className="button button-dark header-cta" href="/crafts">
             {t.exploreCollection}
           </a>
         </div>
@@ -157,8 +162,14 @@ export function Header({ language, setLanguage, t }) {
           id="mobile-navigation"
           aria-label="Mobile navigation"
         >
-          {navigation.map(([label, href]) => (
-            <a key={href} href={href} onClick={() => setMenuOpen(false)}>
+          {navigation.map(([label, href, page]) => (
+            <a
+              key={href}
+              href={href}
+              className={currentPage === page ? "is-active" : undefined}
+              aria-current={currentPage === page ? "page" : undefined}
+              onClick={() => setMenuOpen(false)}
+            >
               {label}
             </a>
           ))}
@@ -184,10 +195,10 @@ export function Hero({ t, image = heroImage }) {
         </h1>
         <p className="hero-copy">{t.heroCopy}</p>
         <div className="hero-actions">
-          <a className="button button-light" href="#collection">
-            {t.discoverCrafts} <span aria-hidden="true">→</span>
+          <a className="button button-light" href="/crafts">
+            {t.discoverCrafts}
           </a>
-          <a className="button button-outline" href="#story">
+          <a className="button button-accent" href="/story">
             {t.ourStory}
           </a>
         </div>
@@ -240,7 +251,7 @@ export function CategoryShowcase({
           {items.map((item) => (
             <a
               className="showcase-card"
-              href="#collection"
+              href="/crafts"
               key={item.id}
               onClick={() => onChooseCategory(item.id)}
             >
@@ -253,7 +264,9 @@ export function CategoryShowcase({
               <span className="showcase-copy">
                 <small>{item.eyebrow}</small>
                 <strong>{item.title}</strong>
-                <span>{t.exploreCollectionLink} →</span>
+                <span className="button button-light showcase-action">
+                  {t.exploreCollectionLink}
+                </span>
               </span>
             </a>
           ))}
@@ -328,11 +341,11 @@ export function Collection({
                   <h3>{craft.name}</h3>
                   <p>{craft.description}</p>
                   <button
-                    className="text-link"
+                    className="button button-dark product-action"
                     type="button"
                     onClick={() => onEnquire(craft.name)}
                   >
-                    {t.enquireLink} <span aria-hidden="true">→</span>
+                    {t.enquireLink}
                   </button>
                 </div>
               </article>
@@ -365,8 +378,8 @@ export function Story({ t, image = storyImage }) {
           <h2>{t.storyTitle}</h2>
           <p>{t.storyParagraphOne}</p>
           <p>{t.storyParagraphTwo}</p>
-          <a className="button button-dark" href="#contact">
-            {t.getToKnowUs} <span aria-hidden="true">→</span>
+          <a className="button button-dark" href="/contact">
+            {t.getToKnowUs}
           </a>
         </div>
       </div>
@@ -419,8 +432,8 @@ export function CallToAction({ t, image = callToActionImage }) {
         <p className="eyebrow eyebrow-light">{t.discoverHeritage}</p>
         <h2>{t.ctaTitle}</h2>
         <p>{t.ctaCopy}</p>
-        <a className="button button-light" href="#contact">
-          {t.contactSeithati} <span aria-hidden="true">→</span>
+        <a className="button button-light" href="/contact">
+          {t.contactSeithati}
         </a>
       </div>
     </section>
@@ -493,7 +506,7 @@ export function Contact({
               )
             }
           >
-            {t.messageUs} <span aria-hidden="true">→</span>
+            {t.messageUs}
           </button>
         </div>
         <form className="enquiry-form" onSubmit={onSubmit}>
@@ -526,7 +539,7 @@ export function Contact({
             <textarea name="message" rows="4" required />
           </label>
           <button className="button button-dark form-submit" type="submit">
-            {t.submit} <span aria-hidden="true">→</span>
+            {t.submit}
           </button>
           <p className="form-note">{t.formNote}</p>
         </form>
@@ -544,7 +557,7 @@ export function Footer({
     <footer className="site-footer">
       <div className="footer-main page-width">
         <div className="footer-about">
-          <a className="footer-brand" href="#home">Seithati Weavers</a>
+          <a className="footer-brand" href="/">Seithati Weavers</a>
           <p>{t.footerTagline}</p>
           <a
             className="footer-social-link"
@@ -567,10 +580,11 @@ export function Footer({
           <h3>{t.footerExplore}</h3>
           <div className="footer-links">
             {[
-              [t.navigation.home, "#home"],
-              [t.navigation.crafts, "#collection"],
-              [t.navigation.story, "#story"],
-              [t.navigation.craft, "#craft"],
+              [t.navigation.home, "/"],
+              [t.navigation.crafts, "/crafts"],
+              [t.navigation.story, "/story"],
+              [t.navigation.craft, "/process"],
+              [t.navigation.contact, "/contact"],
             ].map(([label, href]) => (
               <a href={href} key={href}>{label}</a>
             ))}
@@ -581,7 +595,7 @@ export function Footer({
           <div className="footer-links">
             {categoryShowcases.map(({ id, title }) => (
               <a
-                href="#collection"
+                href="/crafts"
                 key={id}
                 onClick={() => onChooseCategory(id)}
               >
@@ -606,7 +620,7 @@ export function Footer({
               WhatsApp: {details.phone}
             </a>
             <a href={`mailto:${details.email}`}>{details.email}</a>
-            <a href="#contact">{details.fullAddress}</a>
+            <a href="/contact">{details.fullAddress}</a>
           </div>
         </div>
       </div>

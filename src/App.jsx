@@ -3,7 +3,6 @@ import { useCraftCatalog } from "./controllers/useCraftCatalog.js";
 import { useContact } from "./controllers/useContact.js";
 import { useSiteContent } from "./controllers/useSiteContent.js";
 import {
-  Announcement,
   CallToAction,
   CategoryShowcase,
   Collection,
@@ -73,6 +72,36 @@ const quickFaq = {
     },
   ],
 };
+
+function getPageFromPath(pathname) {
+  const page = pathname.replace(/^\/+|\/+$/g, "");
+
+  if (page === "crafts" || page === "collection") return "crafts";
+  if (page === "story") return "story";
+  if (page === "craft" || page === "process") return "process";
+  if (page === "contact") return "contact";
+  return "home";
+}
+
+function getInitialPage() {
+  const legacyRoutes = {
+    "#home": "/",
+    "#crafts": "/crafts",
+    "#collection": "/crafts",
+    "#story": "/story",
+    "#craft": "/process",
+    "#process": "/process",
+    "#contact": "/contact",
+  };
+  const route = legacyRoutes[window.location.hash];
+
+  if (route) {
+    window.history.replaceState({}, "", route);
+    return getPageFromPath(route);
+  }
+
+  return getPageFromPath(window.location.pathname);
+}
 
 function ServiceIcon({ type }) {
   if (type === "phone") {
@@ -302,47 +331,122 @@ function FloatingHelp({ language, setLanguage, contactDetails }) {
 
 export default function App() {
   const [language, setLanguage] = useState("en");
+  const [currentPage, setCurrentPage] = useState(getInitialPage);
   const content = useSiteContent();
   const catalog = useCraftCatalog(content.crafts);
   const contact = useContact(content.contact);
   const t = content.translations[language];
 
+  useEffect(() => {
+    const handleNavigation = () => {
+      setCurrentPage(getPageFromPath(window.location.pathname));
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const handleInternalLink = (event) => {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      const link = event.target.closest("a[href]");
+      if (!link || link.target || link.hasAttribute("download")) {
+        return;
+      }
+
+      const destination = new URL(link.href, window.location.href);
+      const appRoutes = [
+        "/",
+        "/home",
+        "/crafts",
+        "/collection",
+        "/story",
+        "/craft",
+        "/process",
+        "/contact",
+      ];
+      if (
+        destination.origin !== window.location.origin ||
+        !appRoutes.includes(destination.pathname)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      if (destination.pathname !== window.location.pathname) {
+        window.history.pushState({}, "", destination.pathname);
+        handleNavigation();
+      }
+    };
+
+    window.addEventListener("popstate", handleNavigation);
+    document.addEventListener("click", handleInternalLink);
+    return () => {
+      window.removeEventListener("popstate", handleNavigation);
+      document.removeEventListener("click", handleInternalLink);
+    };
+  }, []);
+
   return (
     <>
-      <Announcement text={t.announcement} />
-      <Header language={language} setLanguage={setLanguage} t={t} />
-      <main>
-        <Hero t={t} image={content.images.hero} />
-        <Introduction t={t} />
-        <CategoryShowcase
-          t={t}
-          items={content.categoryShowcases}
-          images={content.images}
-          onChooseCategory={catalog.setActiveCategory}
-        />
-        <Collection
-          activeCategory={catalog.activeCategory}
-          onChooseCategory={catalog.setActiveCategory}
-          searchTerm={catalog.searchTerm}
-          onSearchChange={catalog.setSearchTerm}
-          visibleCrafts={catalog.visibleCrafts}
-          onEnquire={contact.enquireAboutCraft}
-          t={t}
-        />
-        <Story t={t} image={content.images.story} />
-        <CraftProcess
-          t={t}
-          steps={content.craftSteps}
-          images={content.images}
-        />
-        <CallToAction t={t} image={content.images.cta} />
-        <Contact
-          onSubmit={contact.sendEnquiry}
-          onWhatsApp={contact.openWhatsApp}
-          contactDetails={content.contact}
-          t={t}
-          language={language}
-        />
+      <Header
+        language={language}
+        setLanguage={setLanguage}
+        t={t}
+        currentPage={currentPage}
+      />
+      <main className="page-view" key={currentPage}>
+        {currentPage === "home" && (
+          <>
+            <Hero t={t} image={content.images.hero} />
+            <Introduction t={t} />
+            <CategoryShowcase
+              t={t}
+              items={content.categoryShowcases}
+              images={content.images}
+              onChooseCategory={catalog.setActiveCategory}
+            />
+          </>
+        )}
+        {currentPage === "crafts" && (
+          <Collection
+            activeCategory={catalog.activeCategory}
+            onChooseCategory={catalog.setActiveCategory}
+            searchTerm={catalog.searchTerm}
+            onSearchChange={catalog.setSearchTerm}
+            visibleCrafts={catalog.visibleCrafts}
+            onEnquire={contact.enquireAboutCraft}
+            t={t}
+          />
+        )}
+        {currentPage === "story" && (
+          <Story t={t} image={content.images.story} />
+        )}
+        {currentPage === "process" && (
+          <>
+            <CraftProcess
+              t={t}
+              steps={content.craftSteps}
+              images={content.images}
+            />
+            <CallToAction t={t} image={content.images.cta} />
+          </>
+        )}
+        {currentPage === "contact" && (
+          <Contact
+            onSubmit={contact.sendEnquiry}
+            onWhatsApp={contact.openWhatsApp}
+            contactDetails={content.contact}
+            t={t}
+            language={language}
+          />
+        )}
       </main>
       <Footer
         onChooseCategory={catalog.setActiveCategory}
