@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "881602360348",
+    "project_id": "seithati-weavers",
+    "storage_bucket": "seithati-weavers.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881602360348:android:042e51dba284094405dbd9",
+        "android_client_info": {
+          "package_name": "com.seithatiweavers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "881602360348-hgiifgpn5sk8luullnvlnhvd4j5s57qj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.seithatiweavers",
+            "certificate_hash": "726030639523bf106dfb1d5cb6051fcfaf5a3175"
+          }
+        },
+        {
+          "client_id": "881602360348-s03k8fggo9if940ea0f9cuv2af1rb0ud.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOnJdoY9jyCBHNP8eayQF9nVnkx7t04To"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "881602360348-s03k8fggo9if940ea0f9cuv2af1rb0ud.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

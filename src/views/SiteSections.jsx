@@ -109,6 +109,8 @@ export function Header({ language, setLanguage, t, currentPage }) {
     [t.navigation.story, "/story", "story"],
     [t.navigation.craft, "/process", "process"],
     [t.navigation.contact, "/contact", "contact"],
+    [t.navigation.personalizedCrafts, "/personalized-crafts", "personalized-crafts"],
+    [t.navigation.chat, "/customer-chat", "customer-chat"],
   ];
 
   return (
@@ -585,6 +587,8 @@ export function Footer({
               [t.navigation.story, "/story"],
               [t.navigation.craft, "/process"],
               [t.navigation.contact, "/contact"],
+              [t.navigation.personalizedCrafts, "/personalized-crafts"],
+              [t.navigation.chat, "/customer-chat"],
             ].map(([label, href]) => (
               <a href={href} key={href}>{label}</a>
             ))}

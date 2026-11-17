@@ -22,8 +22,149 @@ service cloud.firestore {
     }
 
     match /site/{document} {
-      allow read: if document == "content";
-      allow write: if document == "content" && isAdmin();
+      allow read: if document in ["content", "adminPresence"];
+      allow write: if document in ["content", "adminPresence"] && isAdmin();
+    }
+
+    match /personalizedCraftRequests/{requestId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          "name",
+          "email",
+          "phone",
+          "craftType",
+          "description",
+          "colors",
+          "size",
+          "budget",
+          "timeline",
+          "contactPreference",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.keys().hasAll([
+          "name",
+          "email",
+          "phone",
+          "craftType",
+          "description",
+          "colors",
+          "size",
+          "budget",
+          "timeline",
+          "contactPreference",
+          "status",
+          "createdAt"
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 254
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() <= 40
+        && request.resource.data.craftType is string
+        && request.resource.data.craftType.size() <= 80
+        && request.resource.data.description is string
+        && request.resource.data.description.size() > 0
+        && request.resource.data.description.size() <= 1500
+        && request.resource.data.colors is string
+        && request.resource.data.colors.size() <= 200
+        && request.resource.data.size is string
+        && request.resource.data.size.size() <= 200
+        && request.resource.data.budget is string
+        && request.resource.data.budget.size() <= 120
+        && request.resource.data.timeline is string
+        && request.resource.data.timeline.size() <= 120
+        && request.resource.data.contactPreference in ["email", "phone", "whatsapp"]
+        && request.resource.data.status == "new"
+        && request.resource.data.createdAt == request.time;
+
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status"])
+        && request.resource.data.status in ["new", "contacted", "completed"];
+      allow delete: if false;
+    }
+
+    match /customerChats/{roomId} {
+      allow create: if signedIn()
+        && roomId == "customer-" + request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "customerName",
+          "customerEmail",
+          "updatedAt"
+        ])
+        && request.resource.data.updatedAt == request.time;
+      allow read, list: if isAdmin()
+        || (signedIn() && roomId == "customer-" + request.auth.uid);
+      allow update: if (
+          signedIn()
+          && roomId == "customer-" + request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["customerName", "customerEmail", "updatedAt"])
+        )
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["updatedAt"]));
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly([
+            "sender",
+            "senderId",
+            "senderName",
+            "text",
+            "imageUrl",
+            "imageName",
+            "createdAt"
+          ])
+          && request.resource.data.keys().hasAll([
+            "sender",
+            "senderId",
+            "senderName",
+            "text",
+            "createdAt"
+          ])
+          && request.resource.data.sender in ["customer", "staff"]
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName is string
+          && request.resource.data.text is string
+          && request.resource.data.text.size() <= 2000
+          && (
+            request.resource.data.text.size() > 0
+            || (
+              request.resource.data.imageUrl is string
+              && request.resource.data.imageUrl.size() > 0
+            )
+          )
+          && request.resource.data.createdAt == request.time
+          && (
+            (
+              request.resource.data.sender == "customer"
+              && roomId == "customer-" + request.auth.uid
+            )
+            || (
+              request.resource.data.sender == "staff"
+              && isAdmin()
+              && exists(/databases/$(database)/documents/customerChats/$(roomId))
+            )
+          )
+          && (
+            !("imageUrl" in request.resource.data)
+            || (
+              request.resource.data.imageUrl is string
+              && request.resource.data.imageUrl.size() <= 2048
+              && request.resource.data.imageName is string
+              && request.resource.data.imageName.size() <= 150
+            )
+          );
+        allow read: if isAdmin()
+          || (signedIn() && roomId == "customer-" + request.auth.uid);
+        allow update, delete: if false;
+      }
     }
   }
 }

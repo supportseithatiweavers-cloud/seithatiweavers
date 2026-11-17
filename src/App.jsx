@@ -3,6 +3,16 @@ import { useCraftCatalog } from "./controllers/useCraftCatalog.js";
 import { useContact } from "./controllers/useContact.js";
 import { useSiteContent } from "./controllers/useSiteContent.js";
 import {
+  useAdminPresence,
+  useCustomerAuth,
+  useCustomerChat,
+} from "./controllers/useCustomerChat.js";
+import {
+  ChatFloatingWidget,
+  CustomerChatPage,
+} from "./views/CustomerChatPage.jsx";
+import { PersonalizedCraftPage } from "./views/PersonalizedCraftPage.jsx";
+import {
   CallToAction,
   CategoryShowcase,
   Collection,
@@ -80,6 +90,8 @@ function getPageFromPath(pathname) {
   if (page === "story") return "story";
   if (page === "craft" || page === "process") return "process";
   if (page === "contact") return "contact";
+  if (page === "personalized-crafts") return "personalized-crafts";
+  if (page === "customer-chat") return "customer-chat";
   return "home";
 }
 
@@ -92,6 +104,7 @@ function getInitialPage() {
     "#craft": "/process",
     "#process": "/process",
     "#contact": "/contact",
+    "#chat": "/customer-chat",
   };
   const route = legacyRoutes[window.location.hash];
 
@@ -138,6 +151,28 @@ function ServiceIcon({ type }) {
     );
   }
 
+  if (type === "chat") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6a7.5 7.5 0 1 1 17-3.5Z"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M8 10h8M8 14h5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.8"
+        />
+      </svg>
+    );
+  }
+
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
@@ -150,9 +185,28 @@ function ServiceIcon({ type }) {
   );
 }
 
-function FloatingHelp({ language, setLanguage, contactDetails }) {
+function FloatingHelp({
+  language,
+  setLanguage,
+  contactDetails,
+  chatOpenRequest,
+  chatError,
+  isSignedIn,
+  adminOnline,
+  adminName,
+  adminProfileImageUrl,
+  onGoogleSignIn,
+  onFormSubmit,
+  messages,
+  sending,
+  signingIn,
+  user,
+  t,
+}) {
   const [open, setOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
+  const [liveChatOpen, setLiveChatOpen] = useState(false);
+  const [unreadChatMessages, setUnreadChatMessages] = useState(0);
   const [conversation, setConversation] = useState([]);
   const phoneNumbers = [
     ...new Map(
@@ -182,133 +236,189 @@ function FloatingHelp({ language, setLanguage, contactDetails }) {
     ]);
   };
 
+  const toggleHelp = () => {
+    if (open) {
+      setOpen(false);
+      setFaqOpen(false);
+      setLiveChatOpen(false);
+      return;
+    }
+    setOpen(true);
+  };
+
   useEffect(() => {
     setConversation([]);
   }, [language]);
 
+  useEffect(() => {
+    if (chatOpenRequest > 0) {
+      setOpen(true);
+      setFaqOpen(false);
+      setLiveChatOpen(true);
+    }
+  }, [chatOpenRequest]);
+
   return (
     <div className="help-widget">
-      {open && (
-        <div className="help-popover">
-          {faqOpen && (
-            <section className="help-panel help-chat-panel" aria-label="Frequently asked questions">
-              <div className="help-ai-header">
-                <div>
-                  <p className="help-panel-eyebrow">
-                    {language === "en" ? "Ask AI" : "Botsa mothusi"}
-                  </p>
-                  <h3>
-                    {language === "en"
-                      ? "Seithati help"
-                      : "Thuso ea Seithati"}
-                  </h3>
-                  <p className="faq-status">
-                    <span />
-                    {language === "en" ? "Here to help" : "Re teng ho thusa"}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="close-ai"
-                  onClick={() => setFaqOpen(false)}
-                  aria-label={language === "en" ? "Close FAQ" : "Koala lipotso"}
-                >
-                  ×
-                </button>
-              </div>
-              <div className="faq-language-select-wrap">
-                <span>{language === "en" ? "Choose language" : "Khetha puo"}</span>
-                <LanguageSelect
-                  language={language}
-                  onChange={setLanguage}
-                  label={language === "en" ? "FAQ language" : "Puo ea lipotso"}
-                />
-              </div>
-              <div className="faq-conversation" role="log" aria-live="polite">
-                <div className="chat-message chat-message-assistant">
-                  <span className="chat-avatar">
-                    <ServiceIcon type="ai" />
-                  </span>
-                  <p className="chat-bubble">
-                    {language === "en"
-                      ? "Hello! Choose a question below and I’ll help you find an answer."
-                      : "Lumela! Khetha potso e ka tlase, ke u thuse ka karabo."}
-                  </p>
-                </div>
-                {conversation.map((message, index) => (
-                  <div
-                    className={`chat-message chat-message-${message.role}`}
-                    key={`${message.role}-${index}`}
-                  >
-                    {message.role === "assistant" && (
-                      <span className="chat-avatar">
-                        <ServiceIcon type="ai" />
-                      </span>
-                    )}
-                    <p className="chat-bubble">{message.text}</p>
+      <div className="help-popover" hidden={!open}>
+        <ChatFloatingWidget
+          embedded
+          isOpen={liveChatOpen}
+          onOpenChange={setLiveChatOpen}
+          onUnreadChange={setUnreadChatMessages}
+          error={chatError}
+          isSignedIn={isSignedIn}
+          adminOnline={adminOnline}
+          adminName={adminName}
+          adminProfileImageUrl={adminProfileImageUrl}
+          onGoogleSignIn={onGoogleSignIn}
+          onFormSubmit={onFormSubmit}
+          messages={messages}
+          sending={sending}
+          signingIn={signingIn}
+          user={user}
+          language={language}
+          t={t}
+        />
+        {!liveChatOpen && (
+          <>
+            {faqOpen && (
+              <section className="help-panel help-chat-panel" aria-label="Frequently asked questions">
+                <div className="help-ai-header">
+                  <div>
+                    <p className="help-panel-eyebrow">
+                      {language === "en" ? "Ask AI" : "Botsa mothusi"}
+                    </p>
+                    <h3>
+                      {language === "en"
+                        ? "Seithati help"
+                        : "Thuso ea Seithati"}
+                    </h3>
+                    <p className="faq-status">
+                      <span />
+                      {language === "en" ? "Here to help" : "Re teng ho thusa"}
+                    </p>
                   </div>
-                ))}
-              </div>
-              <div className="faq-suggestions">
-                <span>
-                  {language === "en" ? "Suggested questions" : "Lipotso tse khothalelitsoeng"}
-                </span>
-                {faqEntries.map((item) => (
                   <button
                     type="button"
-                    key={item.question}
-                    className="faq-suggestion"
-                    onClick={() => askQuestion(item)}
+                    className="close-ai"
+                    onClick={() => setFaqOpen(false)}
+                    aria-label={language === "en" ? "Close FAQ" : "Koala lipotso"}
                   >
-                    {item.question}
+                    ×
                   </button>
-                ))}
-              </div>
-            </section>
-          )}
-          <nav className="help-service-list" aria-label="Quick help">
-            {phoneNumbers.map((phone, index) => (
+                </div>
+                <div className="faq-language-select-wrap">
+                  <span>{language === "en" ? "Choose language" : "Khetha puo"}</span>
+                  <LanguageSelect
+                    language={language}
+                    onChange={setLanguage}
+                    label={language === "en" ? "FAQ language" : "Puo ea lipotso"}
+                  />
+                </div>
+                <div className="faq-conversation" role="log" aria-live="polite">
+                  <div className="chat-message chat-message-assistant">
+                    <span className="chat-avatar">
+                      <ServiceIcon type="ai" />
+                    </span>
+                    <p className="chat-bubble">
+                      {language === "en"
+                        ? "Hello! Choose a question below and I’ll help you find an answer."
+                        : "Lumela! Khetha potso e ka tlase, ke u thuse ka karabo."}
+                    </p>
+                  </div>
+                  {conversation.map((message, index) => (
+                    <div
+                      className={`chat-message chat-message-${message.role}`}
+                      key={`${message.role}-${index}`}
+                    >
+                      {message.role === "assistant" && (
+                        <span className="chat-avatar">
+                          <ServiceIcon type="ai" />
+                        </span>
+                      )}
+                      <p className="chat-bubble">{message.text}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="faq-suggestions">
+                  <span>
+                    {language === "en" ? "Suggested questions" : "Lipotso tse khothalelitsoeng"}
+                  </span>
+                  {faqEntries.map((item) => (
+                    <button
+                      type="button"
+                      key={item.question}
+                      className="faq-suggestion"
+                      onClick={() => askQuestion(item)}
+                    >
+                      {item.question}
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+            <nav className="help-service-list" aria-label="Quick help">
+              {phoneNumbers.map((phone) => (
+                <a
+                  className="help-service"
+                  href={`tel:${phone.replace(/\s+/g, "")}`}
+                  key={phone}
+                >
+                  <span className="help-service-icon">
+                    <ServiceIcon type="phone" />
+                  </span>
+                  {language === "en" ? `Call ${phone}` : `Letsetsa ${phone}`}
+                </a>
+              ))}
               <a
                 className="help-service"
-                href={`tel:${phone.replace(/\s+/g, "")}`}
-                key={phone}
+                href={whatsappUrl.toString()}
+                target="_blank"
+                rel="noreferrer"
               >
-                <span className="help-service-icon">
-                  <ServiceIcon type="phone" />
+                <span className="help-service-icon help-whatsapp-icon">
+                  <ServiceIcon type="whatsapp" />
                 </span>
-                {language === "en" ? `Call ${phone}` : `Letsetsa ${phone}`}
+                WhatsApp
               </a>
-            ))}
-            <a
-              className="help-service"
-              href={whatsappUrl.toString()}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span className="help-service-icon help-whatsapp-icon">
-                <ServiceIcon type="whatsapp" />
-              </span>
-              WhatsApp
-            </a>
-            <button
-              type="button"
-              className="help-service"
-              onClick={() => {
-                setFaqOpen((current) => !current);
-              }}
-            >
-              <span className="help-service-icon help-ai-icon">
-                <ServiceIcon type="ai" />
-              </span>
-              {language === "en" ? "Ask AI / FAQ" : "Botsa lipotso"}
-            </button>
-          </nav>
-        </div>
-      )}
+              <button
+                type="button"
+                className="help-service"
+                onClick={() => setLiveChatOpen(true)}
+              >
+                <span className="help-service-icon help-ai-icon">
+                  <ServiceIcon type="chat" />
+                </span>
+                <span className="help-service-label">
+                  {language === "en" ? "Live chat" : "Puisano e phelang"}
+                </span>
+                {unreadChatMessages > 0 && (
+                  <span className="help-chat-unread">
+                    {unreadChatMessages > 9 ? "9+" : unreadChatMessages}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                className="help-service"
+                onClick={() => {
+                  setFaqOpen((current) => !current);
+                }}
+              >
+                <span className="help-service-icon help-ai-icon">
+                  <ServiceIcon type="ai" />
+                </span>
+                {language === "en" ? "Ask AI / FAQ" : "Botsa lipotso"}
+              </button>
+            </nav>
+          </>
+        )}
+      </div>
       <button
         className="help-fab"
         type="button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={toggleHelp}
         aria-label={
           open
             ? language === "en"
@@ -332,10 +442,33 @@ function FloatingHelp({ language, setLanguage, contactDetails }) {
 export default function App() {
   const [language, setLanguage] = useState("en");
   const [currentPage, setCurrentPage] = useState(getInitialPage);
+  const [chatAuthError, setChatAuthError] = useState("");
+  const [chatOpenRequest, setChatOpenRequest] = useState(0);
   const content = useSiteContent();
   const catalog = useCraftCatalog(content.crafts);
   const contact = useContact(content.contact);
+  const authState = useCustomerAuth();
+  const customerChat = useCustomerChat(authState.user);
+  const adminPresence = useAdminPresence();
   const t = content.translations[language];
+
+  const handleGoogleSignIn = async () => {
+    setChatAuthError("");
+    const result = await authState.signInWithGoogle();
+    if (!result.success) setChatAuthError(result.message);
+  };
+  const handleChatSubmit = (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const message = String(formData.get("message") ?? "").trim();
+    const image = formData.get("image");
+    customerChat
+      .sendMessage(message, image instanceof File && image.size ? image : null)
+      .then((sent) => {
+        if (sent) form.reset();
+      });
+  };
 
   useEffect(() => {
     const handleNavigation = () => {
@@ -370,6 +503,8 @@ export default function App() {
         "/craft",
         "/process",
         "/contact",
+        "/personalized-crafts",
+        "/customer-chat",
       ];
       if (
         destination.origin !== window.location.origin ||
@@ -402,6 +537,16 @@ export default function App() {
         currentPage={currentPage}
       />
       <main className="page-view" key={currentPage}>
+        {currentPage === "customer-chat" && (
+          authState.loading ? (
+            <section className="section-space page-width" aria-live="polite">
+              <p>{t.chatCheckingAccount}</p>
+            </section>
+          ) : <CustomerChatPage
+            onOpenChat={() => setChatOpenRequest((request) => request + 1)}
+            t={t}
+          />
+        )}
         {currentPage === "home" && (
           <>
             <Hero t={t} image={content.images.hero} />
@@ -447,6 +592,12 @@ export default function App() {
             language={language}
           />
         )}
+        {currentPage === "personalized-crafts" && (
+          <PersonalizedCraftPage
+            contactDetails={content.contact}
+            t={t}
+          />
+        )}
       </main>
       <Footer
         onChooseCategory={catalog.setActiveCategory}
@@ -457,6 +608,19 @@ export default function App() {
         language={language}
         setLanguage={setLanguage}
         contactDetails={content.contact}
+        chatOpenRequest={chatOpenRequest}
+        chatError={customerChat.chatError || authState.error || chatAuthError}
+        isSignedIn={Boolean(authState.user)}
+        adminOnline={adminPresence.online}
+        adminName={adminPresence.profileName}
+        adminProfileImageUrl={adminPresence.profileImageUrl}
+        onGoogleSignIn={handleGoogleSignIn}
+        onFormSubmit={handleChatSubmit}
+        messages={customerChat.messages}
+        sending={customerChat.chatStatus === "sending"}
+        signingIn={authState.authenticating}
+        user={authState.user}
+        t={t}
       />
     </>
   );
