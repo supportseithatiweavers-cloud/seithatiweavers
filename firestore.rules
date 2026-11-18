@@ -107,7 +107,12 @@ service cloud.firestore {
         )
         || (isAdmin()
           && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(["updatedAt"]));
+            .hasOnly(["updatedAt"]))
+        || (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["adminLastReadAt"])
+          && request.resource.data.keys().hasAll(["adminLastReadAt"])
+          && request.resource.data.adminLastReadAt == request.time);
       allow delete: if false;
 
       match /messages/{messageId} {

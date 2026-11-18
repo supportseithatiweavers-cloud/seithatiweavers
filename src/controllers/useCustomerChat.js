@@ -19,7 +19,9 @@ import { auth, db } from "../firebase.js";
 
 const maxImageSize = 10 * 1024 * 1024;
 const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const mediaApiUrl = import.meta.env.VITE_MEDIA_API_URL;
+const mediaApiUrl =
+  import.meta.env.VITE_MEDIA_API_URL ||
+  "https://seithati-weavers-media.support-seithatiweavers.workers.dev";
 
 export function useCustomerChat(user) {
   const [messages, setMessages] = useState([]);

@@ -43,11 +43,11 @@ The R2 bucket `seithati-weavers-bucket` is accessed through a Cloudflare Worker 
    npx wrangler deploy
    ```
 
-3. Set `VITE_MEDIA_API_URL` in the website's `.env.local` file to the deployed Worker base URL (for example, `https://YOUR-WORKER.workers.dev`). This is a public endpoint URL, not a secret.
-4. Run/build the Flutter app with the deployed Worker URL:
+3. The current Worker URL is `https://seithati-weavers-media.support-seithatiweavers.workers.dev`. It is already the default for the website and Flutter admin. Override `VITE_MEDIA_API_URL` or `MEDIA_API_URL` only when deploying a different Worker; the URL is public and not a secret.
+4. Run/build the Flutter app with an optional Worker URL override:
 
    ```sh
-   flutter run --dart-define=MEDIA_API_URL=https://YOUR-WORKER.workers.dev
+   flutter run --dart-define=MEDIA_API_URL=https://your-worker.workers.dev
    ```
 
-The Worker checks Firebase ID tokens against Firestore before accepting admin uploads or serving customer chat media. It accepts JPEG, PNG, and WebP images up to 10 MB. The admin app's `/media/` route serves published site images; private chat attachments use authenticated `/chat-media/{uid}/{filename}` requests. Set the Worker URL as `MEDIA_API_URL` at Flutter build time.
+The Worker checks Firebase ID tokens against Firestore before accepting admin uploads or serving customer chat media. It accepts JPEG, PNG, and WebP images up to 10 MB. The admin app's `/media/` route serves published site images; private chat attachments use authenticated `/chat-media/{uid}/{filename}` requests.
